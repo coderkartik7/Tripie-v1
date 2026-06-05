@@ -32,9 +32,15 @@ export const useTripStore = create((set) => ({
   setSafety: (safety) => set({ safety }),
   setVoiceUrl: (voiceUrl) => set({ voiceUrl }),
   
+  setBudgetItems: (budgetItems) => set({ budgetItems }),
   addBudgetItem: (item) => set((state) => ({ budgetItems: [...state.budgetItems, item] })),
-  removeBudgetItem: (id) => set((state) => ({ 
-    budgetItems: state.budgetItems.filter(item => item.id !== id) 
+  updateBudgetItemCost: (id, amount) => set((state) => ({
+    budgetItems: state.budgetItems.map((item) =>
+      item.id === id ? { ...item, amount: Math.max(0, Number(amount) || 0) } : item
+    ),
+  })),
+  removeBudgetItem: (id) => set((state) => ({
+    budgetItems: state.budgetItems.filter((item) => item.id !== id),
   })),
 
   setPackingItems: (packingItems) => set({ packingItems }),
