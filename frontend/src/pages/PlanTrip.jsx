@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TripForm from '../components/TripForm';
 import { useTripStore } from '../store/tripStore';
-import { itineraryService, weatherService, hotelService, safetyService } from '../services/api';
+import { itineraryService, weatherService, hotelService, safetyService, flightService } from '../services/api';
 import { Plane, Compass, Loader2, AlertCircle } from 'lucide-react';
 
 export default function PlanTrip() {
   const navigate = useNavigate();
   
   // Zustand actions & state
-  const { setItinerary, setWeather, setHotels, setSafety, setTripRequest, resetStore } = useTripStore();
+  const { setItinerary, setWeather, setHotels, setFlights, setSafety, setTripRequest, resetStore } = useTripStore();
 
   const getTomorrowString = () => {
     const tomorrow = new Date();
@@ -83,17 +83,27 @@ export default function PlanTrip() {
       });
       setHotels(hotelsRes.data);
 
-      // 3. Fetch Safety advisories
+      // 3. Fetch Flights
+      setLoadingStep('Searching available flights...');
+      const flightsRes = await flightService.search({
+        origin: formData.origin,
+        destination: formData.destination,
+        date: formData.start_date,
+        adults: formData.travelers,
+      });
+      setFlights(flightsRes.data);
+
+      // 4. Fetch Safety advisories
       setLoadingStep('Checking travel safety advisories...');
       const safetyRes = await safetyService.getAdvisory(formData.destination);
       setSafety(safetyRes.data);
 
-      // 4. Generate Itinerary
+      // 5. Generate Itinerary
       setLoadingStep('Crafting custom day-wise itinerary with AI...');
       const itineraryRes = await itineraryService.generate(formData);
       setItinerary(itineraryRes.data);
 
-      // 5. Save Trip request inputs
+      // 6. Save Trip request inputs
       setTripRequest(formData);
 
       // Navigate to results

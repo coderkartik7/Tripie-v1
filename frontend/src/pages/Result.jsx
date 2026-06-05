@@ -48,7 +48,7 @@ const mockHotels = [
 
 export default function Result() {
   const navigate = useNavigate();
-  const { tripRequest, itinerary, hotels, safety } = useTripStore();
+  const { tripRequest, itinerary, hotels, flights, safety } = useTripStore();
 
   // Redirect to plan page if no trip is loaded and there's no state (to keep routing logical)
   useEffect(() => {
@@ -130,6 +130,26 @@ export default function Result() {
         </Link>
       </div>
 
+      {/* Available Flights */}
+      <div className="mb-8 bg-white border border-gray-150 rounded-2xl shadow-sm p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-bold text-gray-900">Available Flights</h3>
+          <span className="text-xs text-gray-400 font-medium">
+            {(flights || []).length} options
+          </span>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+          {(flights && flights.length > 0 ? flights : []).map((flight, i) => (
+            <FlightCard key={`${flight.flight_number}-${i}`} flight={flight} />
+          ))}
+          {(!flights || flights.length === 0) && (
+            <p className="text-sm text-gray-500 py-6 px-2">
+              No flights found. Plan a trip from Indian cities like Delhi or Mumbai to see results.
+            </p>
+          )}
+        </div>
+      </div>
+
       <div className="mb-8">
         <MapView />
       </div>
@@ -143,7 +163,6 @@ export default function Result() {
         {/* Right Column: Auxiliary Cards and Info */}
         <div className="space-y-6">
           <SafetyCard safety={safety} destination={destination} />
-          <FlightCard />
 
           {/* Hotels Horizontal Scroll Row */}
           <div className="bg-white border border-gray-150 rounded-2xl shadow-sm p-5">

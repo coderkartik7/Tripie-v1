@@ -29,7 +29,7 @@ export const hotelService = {
 };
 
 export const flightService = {
-  search: (params) => api.get('/flights/', { params }),
+  search: (params) => api.get('/api/flights', { params }),
 };
 
 export const safetyService = {
