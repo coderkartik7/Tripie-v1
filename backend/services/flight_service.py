@@ -21,9 +21,11 @@ CITY_TO_IATA = {
     "jaipur": "JAI",
     "pune": "PNQ",
     "ahmedabad": "AMD",
+    "dehradun": "DED",
 }
 
 AVIATIONSTACK_BASE_URL = "http://api.aviationstack.com/v1/flights"
+# Free plan: HTTP only, access_key only (no dep_iata/arr_iata/flight_date/limit — 403 otherwise)
 
 
 class FlightService:
@@ -116,6 +118,73 @@ class FlightService:
         parsed = self._parse_timestamp(flight.get("departure_sort"))
         return parsed or datetime.max
 
+    def _matches_route(
+        self,
+        item: Dict[str, Any],
+        dep_iata: str,
+        arr_iata: str,
+        date: str,
+    ) -> bool:
+        departure = item.get("departure") or {}
+        arrival = item.get("arrival") or {}
+
+        if departure.get("iata") != dep_iata or arrival.get("iata") != arr_iata:
+            return False
+
+        scheduled = departure.get("scheduled") or ""
+        if date and scheduled and len(scheduled) >= 10:
+            if scheduled[:10] != date:
+                return False
+
+        return True
+
+    def _log_aviationstack_error(self, response: httpx.Response) -> None:
+        try:
+            body = response.json()
+            err = body.get("error") or body
+            logger.warning(
+                "Aviationstack error (HTTP %s): %s",
+                response.status_code,
+                err,
+            )
+        except Exception:
+            logger.warning(
+                "Aviationstack error (HTTP %s): %s",
+                response.status_code,
+                response.text[:300],
+            )
+
+    def _use_paid_filters(self) -> bool:
+        flag = os.getenv("AVIATIONSTACK_USE_PAID_FILTERS", "").lower()
+        return flag in ("1", "true", "yes")
+
+    async def _fetch_aviationstack(
+        self,
+        client: httpx.AsyncClient,
+        params: Dict[str, Any],
+        *,
+        log_errors: bool = True,
+    ) -> Optional[Dict[str, Any]]:
+        response = await client.get(
+            AVIATIONSTACK_BASE_URL,
+            params=params,
+            timeout=15.0,
+            follow_redirects=False,
+        )
+
+        if response.status_code != 200:
+            if log_errors:
+                self._log_aviationstack_error(response)
+            return None
+
+        payload = response.json()
+        if payload.get("error"):
+            if log_errors:
+                logger.warning("Aviationstack API error payload: %s", payload["error"])
+            return None
+
+        return payload
+
     async def search_flights(
         self,
         origin_city: str,
@@ -132,12 +201,13 @@ class FlightService:
         dep_iata = self._resolve_iata(origin_city)
         arr_iata = self._resolve_iata(destination_city)
 
-        params = {
+        paid_params = {
             "access_key": api_key,
             "dep_iata": dep_iata,
             "arr_iata": arr_iata,
             "flight_date": date,
         }
+        free_params = {"access_key": api_key}
 
         try:
             async with httpx.AsyncClient() as client:
@@ -149,31 +219,45 @@ class FlightService:
                     dep_iata,
                     arr_iata,
                 )
-                response = await client.get(
-                    AVIATIONSTACK_BASE_URL,
-                    params=params,
-                    timeout=15.0,
-                )
 
-                if response.status_code != 200:
-                    logger.warning(
-                        "Aviationstack returned status %s. Falling back to mock.",
-                        response.status_code,
-                    )
-                    return self._get_mock_flights(origin_city, destination_city, date, adults)
+                payload = None
 
-                payload = response.json()
-                if payload.get("error"):
-                    logger.warning(
-                        "Aviationstack error: %s. Falling back to mock.",
-                        payload["error"],
+                # Paid plans only — free tier always 403 with route/date filters
+                if self._use_paid_filters():
+                    payload = await self._fetch_aviationstack(
+                        client, paid_params, log_errors=True
                     )
+
+                if payload is None:
+                    payload = await self._fetch_aviationstack(
+                        client, free_params, log_errors=True
+                    )
+
+                if payload is None:
+                    logger.warning("Aviationstack unavailable. Falling back to mock.")
                     return self._get_mock_flights(origin_city, destination_city, date, adults)
 
                 raw_flights = payload.get("data") or []
+
+                # Client-side filter when using free-tier bulk response
+                filtered = [
+                    item
+                    for item in raw_flights
+                    if self._matches_route(item, dep_iata, arr_iata, date)
+                ]
+                if not filtered and raw_flights:
+                    logger.info(
+                        "No flights matched %s -> %s on %s in live feed; using mock.",
+                        dep_iata,
+                        arr_iata,
+                        date,
+                    )
+                    return self._get_mock_flights(origin_city, destination_city, date, adults)
+
+                source_items = filtered if filtered else raw_flights
                 parsed = []
 
-                for item in raw_flights:
+                for item in source_items:
                     flight = self._parse_flight(item, origin_city, destination_city, date)
                     if flight:
                         parsed.append(flight)

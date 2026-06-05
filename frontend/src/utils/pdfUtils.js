@@ -1,0 +1,196 @@
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+
+function escapeHtml(text) {
+  if (text == null) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatCost(value) {
+  const n = Number(value) || 0;
+  return `₹${n.toLocaleString('en-IN')}`;
+}
+
+function buildItineraryHtml(itinerary, tripRequest = {}) {
+  const destination = tripRequest.destination || 'Your Trip';
+  const startDate = tripRequest.start_date || '';
+  const endDate = tripRequest.end_date || '';
+  const dateRange =
+    startDate && endDate ? `${startDate} – ${endDate}` : new Date().toISOString().split('T')[0];
+
+  const daysHtml = (itinerary.days || [])
+    .map((day) => {
+      const activitiesHtml = (day.activities || [])
+        .map(
+          (act) => `
+        <div style="margin-bottom:16px;padding-left:12px;border-left:3px solid #3b82f6;">
+          <div style="font-size:11px;color:#6b7280;margin-bottom:4px;">
+            ${escapeHtml(act.time || '')} · ${escapeHtml(act.type || 'activity')}
+            ${act.estimated_cost ? ` · ${formatCost(act.estimated_cost)}` : ''}
+          </div>
+          <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:4px;">
+            ${escapeHtml(act.name)}
+          </div>
+          <div style="font-size:12px;color:#4b5563;line-height:1.5;margin-bottom:4px;">
+            ${escapeHtml(act.description || '')}
+          </div>
+          ${
+            act.location
+              ? `<div style="font-size:11px;color:#9ca3af;">📍 ${escapeHtml(act.location)}</div>`
+              : ''
+          }
+        </div>
+      `
+        )
+        .join('');
+
+      return `
+      <div style="margin-bottom:28px;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;">
+          <h2 style="margin:0;font-size:18px;font-weight:800;color:#111827;">
+            Day ${day.day}: ${escapeHtml(day.title || '')}
+          </h2>
+          <span style="font-size:12px;font-weight:600;color:#059669;background:#ecfdf5;padding:4px 10px;border-radius:20px;">
+            ${formatCost(day.day_total_cost)}
+          </span>
+        </div>
+        ${activitiesHtml}
+      </div>
+    `;
+    })
+    .join('');
+
+  const tipsHtml = (itinerary.local_tips || [])
+    .map((tip) => `<li style="margin-bottom:6px;font-size:12px;color:#374151;">${escapeHtml(tip)}</li>`)
+    .join('');
+
+  const packingHtml = (itinerary.packing_list || [])
+    .map((item) => {
+      const label = typeof item === 'string' ? item : item.item || item.name;
+      return `<li style="margin-bottom:4px;font-size:12px;color:#374151;">${escapeHtml(label)}</li>`;
+    })
+    .join('');
+
+  return `
+    <div id="tripie-pdf-root" style="width:720px;padding:40px;font-family:system-ui,-apple-system,sans-serif;background:#ffffff;color:#111827;">
+      <div style="margin-bottom:32px;padding-bottom:20px;border-bottom:3px solid #2563eb;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#2563eb;margin-bottom:8px;">
+          Tripie Travel Plan
+        </div>
+        <h1 style="margin:0 0 8px;font-size:28px;font-weight:800;color:#111827;">
+          Trip to ${escapeHtml(destination)}
+        </h1>
+        <p style="margin:0;font-size:13px;color:#6b7280;">${escapeHtml(dateRange)}</p>
+      </div>
+
+      ${
+        itinerary.trip_summary
+          ? `
+        <div style="margin-bottom:28px;padding:16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">
+          <h3 style="margin:0 0 8px;font-size:14px;font-weight:700;color:#1e40af;">Trip Overview</h3>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:#1e3a8a;">${escapeHtml(itinerary.trip_summary)}</p>
+          <p style="margin:12px 0 0;font-size:13px;font-weight:700;color:#111827;">
+            Total estimated cost: ${formatCost(itinerary.total_estimated_cost)}
+          </p>
+        </div>
+      `
+          : ''
+      }
+
+      ${daysHtml}
+
+      ${
+        tipsHtml
+          ? `
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:16px;font-weight:700;margin:0 0 12px;color:#111827;">Local Tips</h3>
+          <ul style="margin:0;padding-left:20px;">${tipsHtml}</ul>
+        </div>
+      `
+          : ''
+      }
+
+      ${
+        packingHtml
+          ? `
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:16px;font-weight:700;margin:0 0 12px;color:#111827;">Packing List</h3>
+          <ul style="margin:0;padding-left:20px;">${packingHtml}</ul>
+        </div>
+      `
+          : ''
+      }
+
+      <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;text-align:center;">
+        Generated by Tripie · ${new Date().toLocaleDateString('en-IN')}
+      </div>
+    </div>
+  `;
+}
+
+function sanitizeFilenamePart(value) {
+  return String(value || 'trip')
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .replace(/_+/g, '_')
+    .slice(0, 40);
+}
+
+/**
+ * Export itinerary as PDF via off-screen HTML → html2canvas → jsPDF.
+ * @param {object} itinerary
+ * @param {object} [tripRequest] - Used for filename (destination, start_date)
+ */
+export async function exportTripPDF(itinerary, tripRequest = {}) {
+  if (!itinerary?.days?.length) {
+    throw new Error('No itinerary data to export.');
+  }
+
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.zIndex = '-1';
+  container.innerHTML = buildItineraryHtml(itinerary, tripRequest);
+  document.body.appendChild(container);
+
+  const target = container.querySelector('#tripie-pdf-root') || container;
+
+  try {
+    const canvas = await html2canvas(target, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    const destination = sanitizeFilenamePart(tripRequest.destination);
+    const date = sanitizeFilenamePart(tripRequest.start_date || new Date().toISOString().split('T')[0]);
+    pdf.save(`Tripie_${destination}_${date}.pdf`);
+  } finally {
+    document.body.removeChild(container);
+  }
+}
