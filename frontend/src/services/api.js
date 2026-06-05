@@ -33,7 +33,7 @@ export const flightService = {
 };
 
 export const safetyService = {
-  getAdvisory: (location) => api.get('/safety/', { params: { location } }),
+  getAdvisory: (destination) => api.get('/api/safety', { params: { destination } }),
 };
 
 export const voiceService = {

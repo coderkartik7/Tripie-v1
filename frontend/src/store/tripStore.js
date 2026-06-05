@@ -37,6 +37,7 @@ export const useTripStore = create((set) => ({
     budgetItems: state.budgetItems.filter(item => item.id !== id) 
   })),
 
+  setPackingItems: (packingItems) => set({ packingItems }),
   togglePackingItem: (id) => set((state) => ({
     packingItems: state.packingItems.map(item => 
       item.id === id ? { ...item, packed: !item.packed } : item

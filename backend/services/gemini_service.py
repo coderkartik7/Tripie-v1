@@ -49,9 +49,17 @@ class GeminiService:
             f"      \"day_total_cost\": 3000\n"
             f"    }}\n"
             f"  ],\n"
-            f"  \"packing_list\": [\"item1\", \"item2\"],\n"
+            f"  \"packing_list\": [\n"
+            f"    {{\"item\": \"Light jacket\", \"category\": \"Clothing\"}},\n"
+            f"    {{\"item\": \"Passport\", \"category\": \"Documents\"}},\n"
+            f"    {{\"item\": \"Phone charger\", \"category\": \"Electronics\"}},\n"
+            f"    {{\"item\": \"Toothbrush\", \"category\": \"Toiletries\"}}\n"
+            f"  ],\n"
             f"  \"local_tips\": [\"tip1\", \"tip2\"]\n"
-            f"}}"
+            f"}}\n\n"
+            f"Packing list rules: each entry needs \"item\" and \"category\". "
+            f"Categories must be one of: Clothing, Documents, Electronics, Toiletries, Misc. "
+            f"Include 12-18 practical items suited to the destination and trip type."
         )
 
         model = genai.GenerativeModel(self.model_name)

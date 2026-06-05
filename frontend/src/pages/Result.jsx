@@ -6,8 +6,7 @@ import HotelCard from '../components/HotelCard';
 import FlightCard from '../components/FlightCard';
 import WeatherCard from '../components/WeatherCard';
 import SafetyCard from '../components/SafetyCard';
-import BudgetTracker from '../components/BudgetTracker';
-import PackingList from '../components/PackingList';
+import ResultBottomPanel from '../components/ResultBottomPanel';
 import VoicePlayer from '../components/VoicePlayer';
 import { useTripStore } from '../store/tripStore';
 import { Calendar, User, Compass, Landmark } from 'lucide-react';
@@ -50,7 +49,7 @@ const mockHotels = [
 
 export default function Result() {
   const navigate = useNavigate();
-  const { tripRequest, itinerary, hotels } = useTripStore();
+  const { tripRequest, itinerary, hotels, safety } = useTripStore();
 
   // Redirect to plan page if no trip is loaded and there's no state (to keep routing logical)
   useEffect(() => {
@@ -142,7 +141,7 @@ export default function Result() {
         {/* Right Column: Auxiliary Cards and Info */}
         <div className="space-y-6">
           <VoicePlayer />
-          <SafetyCard />
+          <SafetyCard safety={safety} destination={destination} />
           <FlightCard />
 
           {/* Hotels Horizontal Scroll Row */}
@@ -158,10 +157,10 @@ export default function Result() {
             </div>
           </div>
 
-          <BudgetTracker />
-          <PackingList />
         </div>
       </div>
+
+      <ResultBottomPanel />
     </div>
   );
 }

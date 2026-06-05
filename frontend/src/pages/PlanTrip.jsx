@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TripForm from '../components/TripForm';
 import { useTripStore } from '../store/tripStore';
-import { itineraryService, weatherService, hotelService } from '../services/api';
+import { itineraryService, weatherService, hotelService, safetyService } from '../services/api';
 import { Plane, Compass, Loader2, AlertCircle } from 'lucide-react';
 
 export default function PlanTrip() {
   const navigate = useNavigate();
   
   // Zustand actions & state
-  const { setItinerary, setWeather, setHotels, setTripRequest, resetStore } = useTripStore();
+  const { setItinerary, setWeather, setHotels, setSafety, setTripRequest, resetStore } = useTripStore();
 
   const getTomorrowString = () => {
     const tomorrow = new Date();
@@ -83,12 +83,17 @@ export default function PlanTrip() {
       });
       setHotels(hotelsRes.data);
 
-      // 3. Generate Itinerary
+      // 3. Fetch Safety advisories
+      setLoadingStep('Checking travel safety advisories...');
+      const safetyRes = await safetyService.getAdvisory(formData.destination);
+      setSafety(safetyRes.data);
+
+      // 4. Generate Itinerary
       setLoadingStep('Crafting custom day-wise itinerary with AI...');
       const itineraryRes = await itineraryService.generate(formData);
       setItinerary(itineraryRes.data);
 
-      // 4. Save Trip request inputs
+      // 5. Save Trip request inputs
       setTripRequest(formData);
 
       // Navigate to results
