@@ -12,9 +12,45 @@ import VoicePlayer from '../components/VoicePlayer';
 import { useTripStore } from '../store/tripStore';
 import { Calendar, User, Compass, Landmark } from 'lucide-react';
 
+const mockHotels = [
+  {
+    hotel_id: 1,
+    name: "The Grand Palace Hotel",
+    review_score: 9.4,
+    review_score_word: "Wonderful",
+    min_total_price: 7500,
+    url: "https://www.booking.com",
+    main_photo_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+    address: "101 Luxury Avenue, City Center",
+    distance_to_center: "0.3 km"
+  },
+  {
+    hotel_id: 2,
+    name: "Serene Boutique Resort",
+    review_score: 8.9,
+    review_score_word: "Excellent",
+    min_total_price: 5200,
+    url: "https://www.booking.com",
+    main_photo_url: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80",
+    address: "45 Tranquility Road",
+    distance_to_center: "1.2 km"
+  },
+  {
+    hotel_id: 3,
+    name: "Urban Vista Suites",
+    review_score: 8.7,
+    review_score_word: "Very Good",
+    min_total_price: 4300,
+    url: "https://www.booking.com",
+    main_photo_url: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&q=80",
+    address: "78 Highrise Boulevard",
+    distance_to_center: "0.8 km"
+  }
+];
+
 export default function Result() {
   const navigate = useNavigate();
-  const { tripRequest, itinerary } = useTripStore();
+  const { tripRequest, itinerary, hotels } = useTripStore();
 
   // Redirect to plan page if no trip is loaded and there's no state (to keep routing logical)
   useEffect(() => {
@@ -108,7 +144,20 @@ export default function Result() {
           <VoicePlayer />
           <SafetyCard />
           <FlightCard />
-          <HotelCard />
+
+          {/* Hotels Horizontal Scroll Row */}
+          <div className="bg-white border border-gray-150 rounded-2xl shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-gray-900">Recommended Hotels</h3>
+              <span className="text-xs text-gray-400 font-medium">{(hotels || []).length} options</span>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+              {(hotels && hotels.length > 0 ? hotels.slice(0, 3) : mockHotels).map((hotel, i) => (
+                <HotelCard key={hotel.hotel_id || i} hotel={hotel} />
+              ))}
+            </div>
+          </div>
+
           <BudgetTracker />
           <PackingList />
         </div>

@@ -25,7 +25,7 @@ export const weatherService = {
 };
 
 export const hotelService = {
-  search: (params) => api.get('/hotels/', { params }),
+  search: (params) => api.get('/api/hotels', { params }),
 };
 
 export const flightService = {
