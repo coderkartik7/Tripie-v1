@@ -159,6 +159,108 @@ npm run preview  # preview production build
 - **Share links** encode itinerary data in the URL; very large trips may hit browser URL length limits.
 - Flight **pricing** is not shown — use **View Deal** to open Google Flights.
 
+## Deploy for free (Vercel + Render)
+
+**Stack:** React on [Vercel](https://vercel.com) · FastAPI on [Render](https://render.com) · secrets only in each platform’s dashboard (never in Git).
+
+### Security rules
+
+| Secret | Where it goes | Never put in |
+|--------|----------------|--------------|
+| `GEMINI_API_KEY`, `AVIATIONSTACK_API_KEY`, `BOOKING_API_KEY`, `OPENWEATHERMAP_API_KEY`, `NEWSAPI_API_KEY` | **Render** environment | Git, Vercel |
+| `VITE_API_BASE_URL` | **Vercel** environment (build-time) | — |
+| `MAPBOX_ACCESS_TOKEN` (optional) | **Vercel** only; restrict by URL in Mapbox dashboard | Backend |
+
+---
+
+### Step 1 — Deploy backend on Render
+
+1. [Render Dashboard](https://dashboard.render.com) → **New** → **Web Service**.
+2. Connect your **GitHub** repo (`Tripie-v1`).
+3. Settings:
+   - **Name:** `tripie-api` (or any name)
+   - **Root Directory:** `backend`
+   - **Runtime:** Python 3
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Instance type:** Free
+4. **Environment** → add variables (paste from your local `.env`, not from Git):
+
+   | Key | Required |
+   |-----|----------|
+   | `GEMINI_API_KEY` | Yes (for AI itinerary) |
+   | `AVIATIONSTACK_API_KEY` | Optional |
+   | `BOOKING_API_KEY` | Optional |
+   | `OPENWEATHERMAP_API_KEY` | Optional |
+   | `NEWSAPI_API_KEY` | Optional |
+   | `ALLOWED_ORIGIN_REGEX` | `^https://.*\.vercel\.app$` (allows Vercel previews) |
+   | `ALLOWED_ORIGINS` | Set **after** Step 2 to your main Vercel URL, e.g. `https://tripie.vercel.app` |
+
+5. **Create Web Service** → copy the URL, e.g. `https://tripie-api.onrender.com`.
+
+**Optional:** use the repo’s `render.yaml` via **New → Blueprint** instead of manual setup.
+
+**Free tier:** service may sleep after inactivity; first request after sleep can take 30–60 seconds.
+
+---
+
+### Step 2 — Deploy frontend on Vercel
+
+1. [Vercel Dashboard](https://vercel.com) → **Add New** → **Project** → import the same GitHub repo.
+2. **Root Directory:** `frontend` (Edit → set to `frontend`).
+3. Framework preset: **Vite** (auto-detected).
+4. **Environment Variables** (Production + Preview):
+
+   | Name | Value |
+   |------|--------|
+   | `VITE_API_BASE_URL` | `https://tripie-api.onrender.com` (your Render URL from Step 1) |
+
+   Optional: `VITE_MAPBOX_ACCESS_TOKEN` or `MAPBOX_ACCESS_TOKEN` for Mapbox maps.
+
+5. **Deploy** → copy your live URL, e.g. `https://tripie.vercel.app`.
+
+---
+
+### Step 3 — Link frontend and backend
+
+1. **Render** → your service → **Environment** → set:
+
+   ```text
+   ALLOWED_ORIGINS=https://tripie.vercel.app
+   ```
+
+   (Use your real Vercel URL; add comma-separated URLs if you use multiple custom domains.)
+
+2. Keep `ALLOWED_ORIGIN_REGEX=^https://.*\.vercel\.app$` so preview deployments work.
+
+3. **Save** → Render redeploys automatically.
+
+4. Open your Vercel URL → **Start Planning** → confirm the trip plan loads (check browser Network tab for calls to Render).
+
+---
+
+### Step 4 — Verify
+
+- `https://your-api.onrender.com/` → `{"status":"online",...}`
+- `https://your-api.onrender.com/docs` → Swagger UI
+- Vercel app → plan a trip → Result page shows itinerary, flights, map, etc.
+
+### Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| CORS error in browser | Set `ALLOWED_ORIGINS` to exact Vercel URL; keep `ALLOWED_ORIGIN_REGEX` for previews |
+| API calls fail / network error | Confirm `VITE_API_BASE_URL` on Vercel matches Render URL; redeploy Vercel after changing env |
+| Slow first request | Render free tier cold start — wait and retry |
+| 403 on flights | Aviationstack free plan limits — mocks still return 200 |
+
+### Updating production
+
+- Push to `main` on GitHub → Vercel and Render auto-redeploy (if enabled).
+- New API keys → update only in Render/Vercel dashboards, then redeploy.
+
+---
+
 ## License
 
 Private / educational use unless otherwise specified by the repository owner.

@@ -1,0 +1,30 @@
+# Render Blueprint — Tripie API (backend only)
+# Deploy: Render Dashboard → New → Blueprint → connect GitHub repo
+# Or: New Web Service → root directory: backend (see README)
+
+services:
+  - type: web
+    name: tripie-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: AVIATIONSTACK_API_KEY
+        sync: false
+      - key: BOOKING_API_KEY
+        sync: false
+      - key: OPENWEATHERMAP_API_KEY
+        sync: false
+      - key: NEWSAPI_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: ALLOWED_ORIGIN_REGEX
+        value: "^https://.*\\.vercel\\.app$"
