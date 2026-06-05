@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class TripRequest(BaseModel):
+    origin: str
     destination: str
     start_date: str
     end_date: str

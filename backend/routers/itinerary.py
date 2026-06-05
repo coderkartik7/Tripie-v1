@@ -32,6 +32,7 @@ async def create_itinerary(request: TripRequest):
     # Generate itinerary
     try:
         itinerary = await gemini_service.generate_itinerary(
+            origin=request.origin,
             destination=request.destination,
             days=days,
             budget=request.budget,

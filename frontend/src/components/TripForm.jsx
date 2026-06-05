@@ -11,22 +11,44 @@ export default function TripForm({ formData, onChange }) {
 
   return (
     <div className="space-y-6 bg-white p-6 rounded-2xl border border-gray-150 shadow-sm">
-      {/* Destination */}
-      <div className="space-y-2">
-        <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-          <MapPin className="w-4 h-4 text-blue-500" />
-          Where do you want to go?
-        </label>
-        <div className="relative">
-          <input
-            type="text"
-            name="destination"
-            value={formData.destination}
-            onChange={onChange}
-            required
-            placeholder="e.g. Hanoi, Paris, Tokyo"
-            className="w-full pl-4 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-800"
-          />
+      {/* Origin & Destination Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Origin */}
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+            <MapPin className="w-4 h-4 text-blue-500" />
+            Where are you starting from?
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              name="origin"
+              value={formData.origin || ''}
+              onChange={onChange}
+              required
+              placeholder="e.g. Delhi, Mumbai, New York"
+              className="w-full pl-4 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-800"
+            />
+          </div>
+        </div>
+
+        {/* Destination */}
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+            <MapPin className="w-4 h-4 text-blue-500" />
+            Where do you want to go?
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              name="destination"
+              value={formData.destination}
+              onChange={onChange}
+              required
+              placeholder="e.g. Hanoi, Paris, Tokyo"
+              className="w-full pl-4 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-800"
+            />
+          </div>
         </div>
       </div>
 

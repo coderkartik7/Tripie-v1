@@ -20,11 +20,11 @@ class GeminiService:
             genai.configure(api_key=api_key)
             self._configured = True
 
-    async def generate_itinerary(self, destination: str, days: int, budget: float, trip_type: str, travelers: int):
+    async def generate_itinerary(self, origin: str, destination: str, days: int, budget: float, trip_type: str, travelers: int):
         self._ensure_configured()
 
         prompt = (
-            f"You are an expert travel planner. Generate a detailed day-wise itinerary for {destination} "
+            f"You are an expert travel planner. Generate a detailed day-wise itinerary starting from {origin} to {destination} "
             f"for {days} days with a total budget of ₹{budget} for {travelers} travelers. Trip type: {trip_type}.\n\n"
             f"Return ONLY valid JSON in this exact structure:\n"
             f"{{\n"

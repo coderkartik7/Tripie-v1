@@ -3,10 +3,13 @@ import { create } from 'zustand';
 export const useTripStore = create((set) => ({
   // State
   tripRequest: {
+    origin: '',
     destination: '',
-    startDate: '',
-    endDate: '',
+    start_date: '',
+    end_date: '',
     budget: 0,
+    trip_type: '',
+    travelers: 1,
     preferences: [],
   },
   itinerary: null,
@@ -42,7 +45,16 @@ export const useTripStore = create((set) => ({
   addPackingItem: (item) => set((state) => ({ packingItems: [...state.packingItems, item] })),
 
   resetStore: () => set({
-    tripRequest: { destination: '', startDate: '', endDate: '', budget: 0, preferences: [] },
+    tripRequest: {
+      origin: '',
+      destination: '',
+      start_date: '',
+      end_date: '',
+      budget: 0,
+      trip_type: '',
+      travelers: 1,
+      preferences: [],
+    },
     itinerary: null,
     hotels: [],
     flights: [],

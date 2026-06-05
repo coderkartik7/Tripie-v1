@@ -24,6 +24,7 @@ export default function PlanTrip() {
   };
 
   const [formData, setFormData] = useState({
+    origin: '',
     destination: '',
     start_date: getTomorrowString(),
     end_date: getInThreeDaysString(),
