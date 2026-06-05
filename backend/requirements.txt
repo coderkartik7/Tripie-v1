@@ -1,7 +1,24 @@
-fastapi>=0.110.0
-uvicorn[standard]>=0.28.0
-pydantic>=2.6.0
-python-dotenv>=1.0.0
-httpx>=0.27.0
-google-generativeai>=0.8.0
+# Tripie backend dependencies
+# Python 3.10+ recommended
+#
+# Install:  pip install -r requirements.txt
+# Run:      uvicorn main:app --reload --host 0.0.0.0 --port 8000
+#
+# Env vars (see .env): GEMINI_API_KEY, AVIATIONSTACK_API_KEY, BOOKING_API_KEY,
+#                       OPENWEATHER_API_KEY, NEWS_API_KEY, etc.
 
+# --- Web framework & server ---
+fastapi>=0.115.0,<1.0.0
+uvicorn[standard]>=0.32.0,<1.0.0
+
+# --- Data validation (TripRequest / API schemas) ---
+pydantic>=2.10.0,<3.0.0
+
+# --- Configuration ---
+python-dotenv>=1.0.1,<2.0.0
+
+# --- Async HTTP (flights, hotels, weather, safety/news) ---
+httpx>=0.28.0,<1.0.0
+
+# --- Google Gemini (itinerary generation) ---
+google-generativeai>=0.8.0,<1.0.0
