@@ -11,3 +11,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #f9fafb; /* gray-50 */
 }
+
+@keyframes map-marker-drop {
+  0% {
+    transform: translateY(-36px);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.map-marker-drop-in {
+  animation: map-marker-drop 0.45s ease-out forwards;
+}
+
+.leaflet-numbered-marker {
+  background: transparent !important;
+  border: none !important;
+}

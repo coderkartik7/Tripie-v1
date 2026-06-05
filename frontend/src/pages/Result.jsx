@@ -7,7 +7,6 @@ import FlightCard from '../components/FlightCard';
 import WeatherCard from '../components/WeatherCard';
 import SafetyCard from '../components/SafetyCard';
 import ResultBottomPanel from '../components/ResultBottomPanel';
-import VoicePlayer from '../components/VoicePlayer';
 import { useTripStore } from '../store/tripStore';
 import { Calendar, User, Compass, Landmark } from 'lucide-react';
 
@@ -131,16 +130,18 @@ export default function Result() {
         </Link>
       </div>
 
+      <div className="mb-8">
+        <MapView />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Itinerary and Map */}
+        {/* Left Column: Itinerary */}
         <div className="lg:col-span-2 space-y-6">
-          <MapView />
           <ItineraryCard />
         </div>
 
         {/* Right Column: Auxiliary Cards and Info */}
         <div className="space-y-6">
-          <VoicePlayer />
           <SafetyCard safety={safety} destination={destination} />
           <FlightCard />
 
