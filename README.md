@@ -2,6 +2,8 @@
 
 AI-powered travel planner that builds a day-by-day itinerary and surfaces flights, hotels, weather, safety info, maps, and budget tools in one results dashboard.
 
+Wanna Test it? -> [[Link](https://tripie-v1.vercel.app/)]
+
 ## Features
 
 Only what is implemented today:
